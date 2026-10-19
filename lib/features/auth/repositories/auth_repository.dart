@@ -29,18 +29,24 @@ class AuthRepositoryI implements AuthRepository {
       required String password,
       required String email}) async {
     return await handleApplicationException(() async {
-      final response = await _client.auth
-          .signUp(email: email, password: password, data: {'name': name});
       final username =
           "${name.split(" ").first}${Random().nextInt(99999999)}".toLowerCase();
-      await _client.from('users').insert({
-        'id': response.user!.id,
-        'name': name,
-        'email': email,
-        'username': username,
-      });
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'name': name, 'username': username},
+      );
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException('Sign up did not return a user.');
+      }
+      // The profile row is created by the database trigger. A client insert
+      // fails row-level security when email confirmation has no session yet.
+      if (response.session == null) {
+        return "Account created. Confirm the email Supabase sent, then sign in.";
+      }
       await _repo.writeData(UserModel(
-          id: response.user!.id,
+          id: user.id,
           role: "general",
           name: name,
           username: username,
