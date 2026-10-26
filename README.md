@@ -162,3 +162,9 @@ A publication-quality 4-page PDF user manual is included in the root directory:
 
 ## 📄 License
 This project is licensed under the MIT License.
+
+SUPABASE_URL=https://xyzcompany.supabase.co
+SUPABASE_ANNONKEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake_key
+BACKEND_API_URL=http://localhost:8000
+GEMINI_API_KEY=AQ.Ab8RN6Leyc1lg15Up0ceSjngwcZ6b3XA_8aKVb0dzDgaYdm9-Q
+
