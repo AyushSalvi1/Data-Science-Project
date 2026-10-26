@@ -34,10 +34,18 @@ class AppCachedNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final projectUrl = dotenv.get('SUPABASE_URL');
-    final fullImageUrl =
-        (prefix ?? "$projectUrl/storage/v1/object/public/") + (imageUrl ?? '');
-    return imageUrl != null
+    final projectUrl = dotenv.isInitialized
+        ? (dotenv.maybeGet('SUPABASE_URL') ?? 'https://xyzcompany.supabase.co')
+        : 'https://xyzcompany.supabase.co';
+    final String fullImageUrl;
+    if (imageUrl != null &&
+        (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://'))) {
+      fullImageUrl = imageUrl!;
+    } else {
+      fullImageUrl =
+          (prefix ?? "$projectUrl/storage/v1/object/public/") + (imageUrl ?? '');
+    }
+    return (imageUrl != null && imageUrl!.isNotEmpty)
         ? isCircular
             ? CircleAvatar(
                 radius: radius,

@@ -22,11 +22,11 @@ class BuildProductGrid extends StatelessWidget {
                 extra: products[index]),
             child: ProductCard(product: products[index]));
       },
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          mainAxisExtent: 250,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          mainAxisExtent: 265,
           crossAxisCount: 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12),
     );
   }
 }

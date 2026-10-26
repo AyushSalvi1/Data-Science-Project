@@ -1,5 +1,7 @@
 import re
+import httpx
 from typing import List, Optional, Tuple
+from backend.config import settings
 from backend.models.schemas import AIAssistantRequest, AIAssistantResponse, UnifiedProduct
 from backend.services.recommendation_service import HybridRecommendationEngine
 
@@ -66,6 +68,44 @@ class AIShoppingAssistant:
         return category, features
 
     @classmethod
+    async def query_gemini_conversational_reply(
+        cls,
+        user_message: str,
+        products: List[UnifiedProduct],
+        budget: Optional[float],
+        category: Optional[str]
+    ) -> Optional[Tuple[str, str]]:
+        if not settings.gemini_api_key:
+            return None
+        try:
+            prod_summaries = [
+                f"- {p.title} ({p.retailer.name}): ₹{p.price:,.0f}, Rating: {p.rating}★"
+                for p in products[:4]
+            ]
+            catalog_text = "\n".join(prod_summaries)
+            prompt = (
+                f"You are ShopWave's intelligent AI shopping assistant. A shopper asks: \"{user_message}\".\n"
+                f"Top matched verified offers:\n{catalog_text}\n\n"
+                f"Give a friendly, natural 1-2 sentence recommendation reply introducing these products. "
+                f"Then on a new line prefixed with 'EXPLANATION: ', provide a 1-sentence analytical rationale highlighting savings and quality."
+            )
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.gemini_api_key}"
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                res = await client.post(
+                    url,
+                    json={"contents": [{"parts": [{"text": prompt}]}]}
+                )
+                if res.status_code == 200:
+                    text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    parts = text.split("EXPLANATION:")
+                    reply = parts[0].strip()
+                    explanation = parts[1].strip() if len(parts) > 1 else ""
+                    return reply, explanation
+        except Exception:
+            pass
+        return None
+
+    @classmethod
     def generate_explanation(
         cls,
         product: UnifiedProduct,
@@ -122,16 +162,25 @@ class AIShoppingAssistant:
                 p, request.message, detected_budget, detected_features
             )
 
-        # Conversational reply synthesis
-        budget_str = f" under ₹{int(detected_budget):,}" if detected_budget else ""
-        category_str = f" {category.lower()}" if category else " products"
-        
-        if ranked:
-            reply = f"I found the best{category_str}{budget_str} tailored to your needs. Here are the top verified options across our partner stores:"
-            explanation = f"Recommended based on verified ratings, pricing constraints, and {len(ranked)} merchant offers analyzed."
+        # Conversational reply synthesis (Gemini AI with heuristic fallback)
+        gemini_result = await cls.query_gemini_conversational_reply(
+            request.message, ranked, detected_budget, category
+        )
+
+        if gemini_result and gemini_result[0]:
+            reply, explanation = gemini_result
+            if not explanation:
+                explanation = f"Curated via Gemini AI based on verified ratings, pricing constraints, and {len(ranked)} merchant offers analyzed."
         else:
-            reply = f"I couldn't find an exact match for '{request.message}'. Here are some popular alternative choices:"
-            explanation = "Showing general best-sellers based on positive buyer sentiment."
+            budget_str = f" under ₹{int(detected_budget):,}" if detected_budget else ""
+            category_str = f" {category.lower()}" if category else " products"
+            
+            if ranked:
+                reply = f"I found the best{category_str}{budget_str} tailored to your needs. Here are the top verified options across our partner stores:"
+                explanation = f"Recommended based on verified ratings, pricing constraints, and {len(ranked)} merchant offers analyzed."
+            else:
+                reply = f"I couldn't find an exact match for '{request.message}'. Here are some popular alternative choices:"
+                explanation = "Showing general best-sellers based on positive buyer sentiment."
 
         return AIAssistantResponse(
             reply=reply,
@@ -141,3 +190,4 @@ class AIShoppingAssistant:
             recommendations=ranked,
             explanation=explanation,
         )
+

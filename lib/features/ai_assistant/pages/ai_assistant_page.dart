@@ -10,7 +10,8 @@ import 'package:flutter_ecommerce/features/multi_retailer/widgets/retailer_badge
 import 'package:gap/gap.dart';
 
 class AIAssistantPage extends StatefulWidget {
-  const AIAssistantPage({super.key});
+  final String? initialPrompt;
+  const AIAssistantPage({super.key, this.initialPrompt});
 
   @override
   State<AIAssistantPage> createState() => _AIAssistantPageState();
@@ -24,9 +25,9 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
   bool _isLoading = false;
 
   final List<String> _quickPrompts = [
-    "iPhone under ₹70,000",
+    "Best phone under ₹25k",
     "Sony noise cancelling headphones",
-    "Best laptop for programming under 50k",
+    "Gaming laptop under 60k",
     "Fitness smartwatch with AMOLED",
   ];
 
@@ -36,11 +37,17 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
     // Welcome message
     _messages.add(
       ChatMessage(
-        text: "👋 Hi! I'm your AI Shopping Assistant. Tell me what you're looking for, your budget, or specifications, and I'll find the best verified deals across Amazon India, Flipkart, Croma, and ShopWave!",
+        text: "👋 Hi! I'm your ShopWave AI Copilot powered by Google Gemini 2.5 Flash. Tell me what you're shopping for, your budget, or desired specs, and I'll find and compare the best verified offers across Amazon India, Flipkart, and Croma!",
         isUser: false,
         timestamp: DateTime.now(),
       ),
     );
+
+    if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sendPrompt(widget.initialPrompt);
+      });
+    }
   }
 
   @override
@@ -118,6 +125,33 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
             ),
           ],
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4F46E5), Color(0xFF0EA5E9)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.bolt, size: 14, color: Colors.white),
+                Gap(4),
+                Text(
+                  "Gemini 2.5 Flash",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

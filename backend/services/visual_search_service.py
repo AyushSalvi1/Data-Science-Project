@@ -1,5 +1,7 @@
 import base64
+import httpx
 from typing import List, Optional, Tuple
+from backend.config import settings
 from backend.models.schemas import UnifiedProduct, VisualSearchRequest, VisualSearchResponse
 
 class VisualSearchService:
@@ -22,13 +24,33 @@ class VisualSearchService:
     @classmethod
     def analyze_image(cls, image_base64: Optional[str], image_url: Optional[str]) -> Tuple[List[str], List[str]]:
         """
-        Simulate/perform image feature extraction.
-        In production, calls Vision API / CLIP embedding model.
+        Perform image feature extraction using Gemini Vision or heuristic vocabulary fallback.
         Extracts dominant category hints and color tags.
         """
-        # If payload contains hint or base64 length, detect attributes
         detected_labels = ["electronics", "gadget"]
         dominant_colors = ["black", "silver"]
+
+        # Call Gemini Vision if base64 image data and API key are available
+        if settings.gemini_api_key and image_base64:
+            try:
+                clean_base64 = image_base64.split(",")[-1] if "," in image_base64 else image_base64
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {"text": "Analyze this product photo. Output only 5 to 8 comma-separated lowercase tags for product type, brand, and color. Example: smartphone, apple, iphone, black, electronics"},
+                            {"inline_data": {"mime_type": "image/jpeg", "data": clean_base64}}
+                        ]
+                    }]
+                }
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.gemini_api_key}"
+                resp = httpx.post(url, json=payload, timeout=4.0)
+                if resp.status_code == 200:
+                    text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    gemini_labels = [item.strip().lower() for item in text.split(",") if item.strip()]
+                    if gemini_labels:
+                        detected_labels.extend(gemini_labels)
+            except Exception:
+                pass
         
         # Detect if image name or hint provides context
         ref = (image_url or "").lower()

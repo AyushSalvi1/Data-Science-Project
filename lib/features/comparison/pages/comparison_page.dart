@@ -13,7 +13,7 @@ class ComparisonPage extends StatefulWidget {
 
   const ComparisonPage({
     super.key,
-    required this.productTitle,
+    this.productTitle = "Apple iPhone 15 Pro Max",
     this.category,
   });
 
