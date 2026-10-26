@@ -37,8 +37,17 @@ class _SearchPageState extends State<SearchPage> {
 
   bool _isMultiStoreMode = true;
   String _sortBy = 'relevance';
+  String _selectedStore = 'All';
   List<RetailerProductModel> _multiRetailerResults = [];
   bool _isLoadingMultiStore = false;
+
+  final List<String> _availableStores = [
+    'All',
+    'Amazon India',
+    'Flipkart',
+    'Croma',
+    'ShopWave',
+  ];
 
   @override
   void initState() {
@@ -87,7 +96,14 @@ class _SearchPageState extends State<SearchPage> {
     if (mounted) {
       setState(() {
         _isLoadingMultiStore = false;
-        _multiRetailerResults = result.fold((f) => [], (items) => items);
+        var items = result.fold((f) => <RetailerProductModel>[], (items) => items);
+        if (_showDiscountedOnly) {
+          items = items.where((p) => p.discountPercentage != null && p.discountPercentage! > 0).toList();
+        }
+        if (_selectedStore != 'All') {
+          items = items.where((p) => p.retailer.name.toLowerCase().contains(_selectedStore.toLowerCase())).toList();
+        }
+        _multiRetailerResults = items;
       });
     }
   }
@@ -100,6 +116,7 @@ class _SearchPageState extends State<SearchPage> {
       _maxPrice = null;
       _showDiscountedOnly = false;
       _sortBy = 'relevance';
+      _selectedStore = 'All';
     });
     _applyFilters();
   }
@@ -213,6 +230,30 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ],
             ),
+            if (_isMultiStoreMode) ...[
+              const Gap(8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _availableStores.map((store) {
+                    final isSelected = _selectedStore == store;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        label: Text(store, style: const TextStyle(fontSize: 11)),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedStore = selected ? store : 'All';
+                          });
+                          _applyFilters();
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -64,9 +64,13 @@ class _AddressFormPageState extends State<AddressFormPage> {
                   Expanded(
                       child: AppFormBuilderTextField(
                     name: 'zip',
-                    hintText: 'Zip code',
+                    hintText: 'PIN / Zip code',
                     validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.zipCode(checkNullOrEmpty: false),
+                      FormBuilderValidators.match(
+                        RegExp(r'^\d{5,6}$'),
+                        errorText: 'Enter a valid 5 or 6 digit PIN / Zip code',
+                        checkNullOrEmpty: false,
+                      ),
                     ]),
                   )),
                 ],

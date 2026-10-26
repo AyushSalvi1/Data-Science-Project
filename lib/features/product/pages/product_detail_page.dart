@@ -2,15 +2,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_ecommerce/common/utils/auth_utils.dart';
-import 'package:flutter_ecommerce/dependency_injection.dart';
-import 'package:flutter_ecommerce/features/address/blocs/get_address_bloc/get_address_bloc.dart';
-import 'package:flutter_ecommerce/features/cart/blocs/cart_bloc/cart_bloc.dart';
-import 'package:flutter_ecommerce/features/cart/models/cart_form.dart';
-import 'package:flutter_ecommerce/features/cart/widgets/cart_bloc_listener.dart';
-import 'package:flutter_ecommerce/features/order/models/buy_now_and_cart_order_models.dart';
-import 'package:flutter_ecommerce/features/product/widgets/item_quantity_controller.dart';
-import 'package:flutter_ecommerce/routes.dart';
 import 'package:gap/gap.dart';
 import 'package:flutter_ecommerce/common/widgets/custom_cached_network_image.dart';
 import 'package:flutter_ecommerce/features/product/models/product.dart';
@@ -20,7 +11,7 @@ import 'package:flutter_ecommerce/features/wishlist/blocs/wishlist_bloc/wishlist
 import 'package:flutter_ecommerce/features/price_tracking/widgets/price_history_widget.dart';
 import 'package:flutter_ecommerce/features/review/widgets/product_reviews_section.dart';
 import 'package:flutter_ecommerce/features/comparison/pages/comparison_page.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_ecommerce/features/multi_retailer/widgets/product_redirect_button.dart';
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({
@@ -36,13 +27,10 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   double currentImageIndex = 0.0;
   Product? product;
-  int _quantity = 1;
-  late final CartBloc _cartBloc;
 
   @override
   void initState() {
     product = widget.product;
-    _cartBloc = sl<CartBloc>();
     super.initState();
   }
 
@@ -136,52 +124,44 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _bottomSheet() {
-    return Card(
+    final queryName = Uri.encodeComponent(product!.name);
+    final redirectUrl = 'https://www.amazon.in/s?k=$queryName&tag=shopwave-21';
+
+    return Container(
       color: ColorScheme.of(context).surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
-            .copyWith(top: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ItemQuantityController(
-              label: "Quantity",
-              getQuantity: (quantity) {
-                _quantity = quantity;
-              },
-            ),
-            Gap(12),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: BlocBuilder<GetAddressBloc, GetAddressState>(
-                    builder: (context, state) {
-                      return OutlinedButton(
-                        onPressed: _onBuyNow,
-                        child: Text("Buy now"),
-                      );
-                    },
-                  ),
-                ),
-                Spacer(),
-                Expanded(
-                  flex: 3,
-                  child: CartBlocListener(
-                    bloc: _cartBloc,
-                    child: FilledButton(
-                      onPressed: () async => await AuthUtil.checkAuthAndProceed(
-                          context, _onAddToCart),
-                      child: Text("Add to cart"),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => ComparisonPage(
+                      productTitle: product!.name,
                     ),
                   ),
-                ),
-              ],
+                );
+              },
+              icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+              label: const Text("Compare", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-          ],
-        ),
+          ),
+          const Gap(12),
+          Expanded(
+            flex: 3,
+            child: ProductRedirectButton(
+              url: redirectUrl,
+              retailerName: "Partner Store",
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -364,19 +344,5 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
       ),
     );
-  }
-
-  void _onAddToCart() {
-    final cart = CartForm(productId: product!.id, quantity: _quantity);
-    _cartBloc.add(CartEvent.add(cart));
-  }
-
-  void _onBuyNow() {
-    context.pushNamed(AppRouteName.checkout,
-        extra: BuyNowOrderModel(
-          product: product!,
-          quantity: _quantity,
-          totalAmount: product!.currentAmount * _quantity,
-        ));
   }
 }

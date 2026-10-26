@@ -15,7 +15,6 @@ import 'package:flutter_ecommerce/features/order/pages/order_management_page.dar
 import 'package:flutter_ecommerce/features/product/pages/product_form.dart';
 import 'package:flutter_ecommerce/features/auth/pages/sign_in.dart';
 import 'package:flutter_ecommerce/features/auth/pages/sign_up.dart';
-import 'package:flutter_ecommerce/features/cart/pages/cart_page.dart';
 import 'package:flutter_ecommerce/features/home/pages/home_page.dart';
 import 'package:flutter_ecommerce/features/order/models/buy_now_and_cart_order_models.dart';
 import 'package:flutter_ecommerce/features/order/pages/checkout_page.dart';
@@ -28,6 +27,7 @@ import 'package:flutter_ecommerce/features/user/pages/vendor_page.dart';
 import 'package:flutter_ecommerce/features/wishlist/pages/wishlist_page.dart';
 import 'package:flutter_ecommerce/features/ai_assistant/pages/ai_assistant_page.dart';
 import 'package:flutter_ecommerce/features/visual_search/pages/visual_search_page.dart';
+import 'package:flutter_ecommerce/features/comparison/pages/comparison_page.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouteName {
@@ -193,7 +193,7 @@ class AppRoute {
               GoRoute(
                 path: AppRouteName.cart.path,
                 name: AppRouteName.cart,
-                builder: (context, state) => const CartPage(),
+                builder: (context, state) => const ComparisonPage(),
               )
             ],
           ),

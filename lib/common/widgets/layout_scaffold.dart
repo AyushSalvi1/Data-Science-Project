@@ -14,27 +14,6 @@ class LayoutScaffold extends StatefulWidget {
 }
 
 class _LayoutScaffoldState extends State<LayoutScaffold> {
-  final List<String> _iconPaths = [
-    'assets/icons/home_outline.svg',
-    'assets/icons/search.svg',
-    'assets/icons/cart_outline.svg',
-    'assets/icons/account_outline.svg',
-  ];
-
-  final List<String> _activeIconPaths = [
-    'assets/icons/home_filled.svg',
-    'assets/icons/search.svg',
-    'assets/icons/cart_filled.svg',
-    'assets/icons/account_filled.svg',
-  ];
-
-  final List<String> _labels = [
-    'Home',
-    'Search',
-    'Cart',
-    'Account',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return AppAnnotatedRegion(
@@ -47,26 +26,75 @@ class _LayoutScaffoldState extends State<LayoutScaffold> {
           type: BottomNavigationBarType.fixed,
           unselectedFontSize: 12,
           selectedFontSize: 12,
-          items: List.generate(4, (index) {
-            return BottomNavigationBarItem(
+          items: [
+            BottomNavigationBarItem(
               activeIcon: SvgPicture.asset(
-                _activeIconPaths[index],
+                'assets/icons/home_filled.svg',
                 width: 24,
                 height: 24,
                 colorFilter: ColorFilter.mode(
-                    ColorScheme.of(context).onSurfaceVariant, BlendMode.srcIn),
+                    ColorScheme.of(context).primary, BlendMode.srcIn),
               ),
               icon: SvgPicture.asset(
-                _iconPaths[index],
+                'assets/icons/home_outline.svg',
                 width: 24,
                 height: 24,
                 colorFilter: ColorFilter.mode(
                     ColorScheme.of(context).onSurfaceVariant.withAlpha(160),
                     BlendMode.srcIn),
               ),
-              label: _labels[index],
-            );
-          }),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              activeIcon: SvgPicture.asset(
+                'assets/icons/search.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                    ColorScheme.of(context).primary, BlendMode.srcIn),
+              ),
+              icon: SvgPicture.asset(
+                'assets/icons/search.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                    ColorScheme.of(context).onSurfaceVariant.withAlpha(160),
+                    BlendMode.srcIn),
+              ),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              activeIcon: Icon(
+                Icons.compare_arrows_rounded,
+                size: 26,
+                color: ColorScheme.of(context).primary,
+              ),
+              icon: Icon(
+                Icons.compare_arrows_rounded,
+                size: 26,
+                color: ColorScheme.of(context).onSurfaceVariant.withAlpha(160),
+              ),
+              label: 'Compare',
+            ),
+            BottomNavigationBarItem(
+              activeIcon: SvgPicture.asset(
+                'assets/icons/account_filled.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                    ColorScheme.of(context).primary, BlendMode.srcIn),
+              ),
+              icon: SvgPicture.asset(
+                'assets/icons/account_outline.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                    ColorScheme.of(context).onSurfaceVariant.withAlpha(160),
+                    BlendMode.srcIn),
+              ),
+              label: 'Account',
+            ),
+          ],
         ),
       ),
     );

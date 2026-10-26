@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_ecommerce/common/widgets/app_loading.dart';
 import 'package:flutter_ecommerce/common/widgets/custom_cached_network_image.dart';
-import 'package:flutter_ecommerce/dependency_injection.dart';
-import 'package:flutter_ecommerce/features/cart/blocs/cart_bloc/cart_bloc.dart';
-import 'package:flutter_ecommerce/features/cart/models/cart_form.dart';
+import 'package:flutter_ecommerce/features/comparison/pages/comparison_page.dart';
 import 'package:flutter_ecommerce/features/wishlist/blocs/wishlist_bloc/wishlist_bloc.dart';
 import 'package:flutter_ecommerce/features/wishlist/blocs/wishlist_bloc/wishlist_state.dart';
 import 'package:flutter_ecommerce/routes.dart';
@@ -156,18 +154,15 @@ class WishlistPage extends StatelessWidget {
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.add_shopping_cart_outlined),
-                                tooltip: "Move to Cart",
+                                icon: const Icon(Icons.compare_arrows_rounded),
+                                tooltip: "Compare Prices Across Stores",
                                 onPressed: () {
-                                  sl<CartBloc>().add(
-                                    CartEvent.add(
-                                      CartForm(productId: product.id, quantity: 1),
-                                    ),
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text("${product.name} added to cart"),
-                                      duration: const Duration(seconds: 2),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ComparisonPage(
+                                        productTitle: product.name,
+                                      ),
                                     ),
                                   );
                                 },

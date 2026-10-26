@@ -26,16 +26,39 @@ class _ComparisonPageState extends State<ComparisonPage> {
   ProductComparisonModel? _comparison;
   bool _isLoading = true;
   String? _error;
+  late final TextEditingController _searchController;
+  late String _currentQuery;
+
+  final List<String> _quickQueries = [
+    "Apple iPhone 15",
+    "Sony WH-1000XM5",
+    "MacBook Air",
+    "Running Shoes",
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchComparison();
+    _currentQuery = widget.productTitle;
+    _searchController = TextEditingController(text: widget.productTitle);
+    _fetchComparison(_currentQuery);
   }
 
-  Future<void> _fetchComparison() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchComparison(String query) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _currentQuery = query;
+    });
+
     final result = await _repo.compareProducts(
-      productTitle: widget.productTitle,
+      productTitle: query,
       category: widget.category,
     );
     if (mounted) {
@@ -56,58 +79,120 @@ class _ComparisonPageState extends State<ComparisonPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Retailer Price Comparison",
+          "Price Comparison Matrix",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
-      body: _isLoading
-          ? AppLoading.center()
-          : _error != null
-              ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)))
-              : _comparison == null || _comparison!.bestOffersByRetailer.isEmpty
-                  ? const Center(child: Text("No comparison offers available."))
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _comparison!.productTitle,
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Gap(12),
-                          // Analytical Verdict Card
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer.withAlpha(80),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.primary.withAlpha(50)),
-                            ),
-                            child: Row(
+      body: Column(
+        children: [
+          // Search & Quick Filter Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: theme.colorScheme.surface,
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Search product to compare across stores...",
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.arrow_forward),
+                      onPressed: () {
+                        if (_searchController.text.trim().isNotEmpty) {
+                          _fetchComparison(_searchController.text.trim());
+                        }
+                      },
+                    ),
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerLowest,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                  ),
+                  onSubmitted: (val) {
+                    if (val.trim().isNotEmpty) {
+                      _fetchComparison(val.trim());
+                    }
+                  },
+                ),
+                const Gap(8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _quickQueries.map((q) {
+                      final isSelected = _currentQuery.toLowerCase() == q.toLowerCase();
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(q, style: const TextStyle(fontSize: 11)),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            _searchController.text = q;
+                            _fetchComparison(q);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Results
+          Expanded(
+            child: _isLoading
+                ? AppLoading.center()
+                : _error != null
+                    ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.error)))
+                    : _comparison == null || _comparison!.bestOffersByRetailer.isEmpty
+                        ? const Center(child: Text("No comparison offers available."))
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+                                Text(
+                                  _comparison!.productTitle,
+                                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
                                 const Gap(12),
-                                Expanded(
-                                  child: Text(
-                                    _comparison!.verdict,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                    ),
+                                // Analytical Verdict Card
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer.withAlpha(80),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: theme.colorScheme.primary.withAlpha(50)),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+                                      const Gap(12),
+                                      Expanded(
+                                        child: Text(
+                                          _comparison!.verdict,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          const Gap(20),
-                          Text(
-                            "Offers Across 3+ Stores",
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Gap(12),
+                                const Gap(20),
+                                Text(
+                                  "Offers Across 3+ Stores",
+                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const Gap(12),
                           // Side-by-side comparison cards
                           ..._comparison!.bestOffersByRetailer.map((offer) {
                             return _buildOfferCard(offer, theme);
@@ -115,6 +200,9 @@ class _ComparisonPageState extends State<ComparisonPage> {
                         ],
                       ),
                     ),
+          ),
+        ],
+      ),
     );
   }
 
