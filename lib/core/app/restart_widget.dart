@@ -4,7 +4,7 @@ import 'package:flutter_ecommerce/dependency_injection.dart';
 class RestartWidget extends StatefulWidget {
   const RestartWidget({super.key, required this.child});
   final Widget child;
-  static restartApp(BuildContext context) {
+  static void restartApp(BuildContext context) {
     context.findAncestorStateOfType<_RestartWidgetState>()?.restartApp();
   }
 
